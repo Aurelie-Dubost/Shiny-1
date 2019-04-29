@@ -16,6 +16,7 @@ data$DateTime <- strptime(as.character(data$DateTime),format="%m/%d/%Y %H:%M")
 data$DateTime <- as.POSIXct(data$DateTime)
 
 data$Day <- as.numeric(as.character(strftime(data$DateTime,format="%d")))
+data$Hour <- as.numeric(as.character(strftime(data$DateTime,format="%H")))
 
 data <- data %>% filter(BC6!=0)
 
@@ -67,7 +68,8 @@ ui <- fluidPage(
       
       # Output: Histogram ----
       plotOutput(outputId = "distPlot"),
-      plotOutput(outputId = "distPlot1")
+      plotOutput(outputId = "distPlot1"),
+      plotOutput(outputId = "distPlot2")
     )
   )
 )
@@ -108,7 +110,7 @@ server <- function(input, output){
     p2 <- p2 +  theme_bw()+
       theme(axis.title = element_text(size=12,color="BLACK",face="bold"),
             axis.text = element_text(size=14,color="BLACK",face="bold"))+
-      labs(x="Black Carbon (ng/m3)",y="Count",title="Black Carbon Concentration Histogram")
+      labs(x="Black Carbon (ng/m3)",y="Count",title=paste("Black Carbon Concentration Histogram",input$channel1,sep = " "))
     
     p2
     #hist(x, breaks = bins, col = sColor, border = input$border1,
@@ -117,7 +119,7 @@ server <- function(input, output){
   })
   
   output$distPlot1 <- renderPlot({
-    
+   
     p1 <- data  %>%  filter(Day >= input$range1[1] & Day <= input$range1[2]) %>% ggplot(aes(x=DateTime))
     if(input$channel1 == "BC1"){
       p1 <- p1 + geom_line(aes(y=BC1,col="BC1"),size=0.5)
@@ -145,6 +147,54 @@ server <- function(input, output){
             axis.text = element_text(size=14,color="BLACK",face="bold"))+
       labs(x="Time",y="Black Carbon (ng/m3)",title="Black Carbon Concentration in Air - Dec, 2017",colour="Channel")
 
+    p1
+    
+  })
+  
+  output$distPlot2 <- renderPlot({
+    d <- data  %>%  filter(Day >= input$range1[1] & Day <= input$range1[2])
+    
+    d <- ddply(d, .variables = c("Hour"),function(x){
+      
+      BC1avg <- mean(x$BC1,na.rm = T)
+      BC2avg <- mean(x$BC2,na.rm = T)
+      BC3avg <- mean(x$BC3,na.rm = T)
+      BC4avg <- mean(x$BC4,na.rm = T)
+      BC5avg <- mean(x$BC5,na.rm = T)
+      BC6avg <- mean(x$BC6,na.rm = T)
+      BC7avg <- mean(x$BC7,na.rm = T)
+      
+      data.frame(BC1avg,BC2avg,BC3avg,BC4avg,BC5avg,BC6avg,BC7avg)
+    })
+    
+    p1 <- d %>% ggplot(aes(x=Hour))
+    if(input$channel1 == "BC1"){
+      p1 <- p1 + geom_line(aes(y=BC1avg,col="BC1"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC1avg))
+    }else if(input$channel1 == "BC2"){
+      p1 <- p1 + geom_line(aes(y=BC2avg,col="BC2"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC2avg))
+    }else if(input$channel1 == "BC3"){
+      p1 <- p1 + geom_line(aes(y=BC3avg,col="BC3"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC3avg))
+    }else if(input$channel1 == "BC4"){
+      p1 <- p1 + geom_line(aes(y=BC4avg,col="BC4"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC4avg))
+    }else if(input$channel1 == "BC5"){
+      p1 <- p1 + geom_line(aes(y=BC5avg,col="BC5"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC5avg))
+    }else if(input$channel1 == "BC6"){
+      p1 <- p1 + geom_line(aes(y=BC6avg,col="BC6"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC6avg))
+    }else if(input$channel1 == "BC7"){
+      p1 <- p1 + geom_line(aes(y=BC7avg,col="BC7"),size=1)
+      p1 <- p1 + geom_point(aes(y=BC7avg))
+    }
+    p1 <- p1 +  theme_bw()+
+      theme(axis.title = element_text(size=12,color="BLACK",face="bold"),
+            axis.text = element_text(size=14,color="BLACK",face="bold"))+
+      labs(x="Time",y="Black Carbon (ng/m3)",title="Black Carbon Concentration in Air - Average Diurnal Variation - Dec, 2017",colour="Channel")
+    
     p1
     
   })
