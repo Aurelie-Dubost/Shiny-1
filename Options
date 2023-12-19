@@ -71,3 +71,63 @@ plt.ylabel('Payout')
 plt.legend()
 plt.grid(True)
 plt.show()
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display
+
+def calculate_payout(stock_price, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put):
+    net_premium = premium_call + premium_put - premium_protective_put
+    if stock_price > call_strike:
+        return (call_strike - stock_price) + net_premium
+    elif put_strike < stock_price <= call_strike:
+        return net_premium
+    elif protective_put_strike < stock_price <= put_strike:
+        return (put_strike - stock_price) + net_premium
+    else:  # stock_price <= protective_put_strike
+        return (put_strike - protective_put_strike) + net_premium
+
+def plot_graph(call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put):
+    stock_prices = np.linspace(50, 150, 1000)
+    payouts = [calculate_payout(sp, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put) for sp in stock_prices]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(stock_prices, payouts, label='Protective Put Short Strangle Payout', color='blue')
+    plt.axhline(0, color='black', lw=1)
+    plt.axvline(call_strike, color='red', linestyle='--', lw=1, label='Call Strike')
+    plt.axvline(put_strike, color='green', linestyle='--', lw=1, label='Put Strike')
+    plt.axvline(protective_put_strike, color='purple', linestyle='--', lw=1, label='Protective Put Strike')
+    plt.title('Protective Put Short Strangle Payout vs. Stock Price at Expiration')
+    plt.xlabel('Stock Price at Expiration')
+    plt.ylabel('Payout')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+# Interactive Widgets
+call_strike_slider = widgets.IntSlider(value=110, min=50, max=150, step=1, description='Call Strike:')
+put_strike_slider = widgets.IntSlider(value=90, min=50, max=150, step=1, description='Put Strike:')
+protective_put_strike_slider = widgets.IntSlider(value=85, min=50, max=150, step=1, description='Protective Put Strike:')
+premium_call_slider = widgets.FloatSlider(value=5, min=0, max=10, step=0.1, description='Premium Call:')
+premium_put_slider = widgets.FloatSlider(value=4, min=0, max=10, step=0.1, description='Premium Put:')
+premium_protective_put_slider = widgets.FloatSlider(value=2, min=0, max=10, step=0.1, description='Premium Protective Put:')
+
+ui = widgets.VBox([call_strike_slider, put_strike_slider, protective_put_strike_slider, 
+                   premium_call_slider, premium_put_slider, premium_protective_put_slider])
+
+out = widgets.interactive_output(plot_graph, {'call_strike': call_strike_slider, 
+                                               'put_strike': put_strike_slider, 
+                                               'protective_put_strike': protective_put_strike_slider, 
+                                               'premium_call': premium_call_slider, 
+                                               'premium_put': premium_put_slider, 
+                                               'premium_protective_put': premium_protective_put_slider})
+
+display(ui, out)
+
+
+
+
