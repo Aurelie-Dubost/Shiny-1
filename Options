@@ -30,3 +30,44 @@ premium_protective_put = 2
 
 payout = calculate_payout(stock_price, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put)
 print(f"The payout of the protective put short strangle strategy is: {payout}")
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def calculate_payout(stock_price, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put):
+    net_premium = premium_call + premium_put - premium_protective_put
+    if stock_price > call_strike:
+        return (call_strike - stock_price) + net_premium
+    elif put_strike < stock_price <= call_strike:
+        return net_premium
+    elif protective_put_strike < stock_price <= put_strike:
+        return (put_strike - stock_price) + net_premium
+    else:  # stock_price <= protective_put_strike
+        return (put_strike - protective_put_strike) + net_premium
+
+# Define strategy parameters
+call_strike = 110
+put_strike = 90
+protective_put_strike = 85
+premium_call = 5
+premium_put = 4
+premium_protective_put = 2
+
+# Generate a range of stock prices for plotting
+stock_prices = np.linspace(50, 150, 1000)
+payouts = [calculate_payout(sp, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put) for sp in stock_prices]
+
+# Plotting
+plt.figure(figsize=(10, 6))
+plt.plot(stock_prices, payouts, label='Protective Put Short Strangle Payout', color='blue')
+plt.axhline(0, color='black', lw=1)
+plt.axvline(call_strike, color='red', linestyle='--', lw=1, label='Call Strike')
+plt.axvline(put_strike, color='green', linestyle='--', lw=1, label='Put Strike')
+plt.axvline(protective_put_strike, color='purple', linestyle='--', lw=1, label='Protective Put Strike')
+plt.title('Protective Put Short Strangle Payout vs. Stock Price at Expiration')
+plt.xlabel('Stock Price at Expiration')
+plt.ylabel('Payout')
+plt.legend()
+plt.grid(True)
+plt.show()
