@@ -1,0 +1,32 @@
+# Protective Put Short Strangle Payout Calculator
+
+def calculate_payout(stock_price, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put):
+    net_premium = premium_call + premium_put - premium_protective_put
+    payout = 0
+
+    if stock_price > call_strike:
+        # Scenario when the stock price is above the call strike price
+        payout = (call_strike - stock_price) + net_premium
+    elif put_strike < stock_price < call_strike:
+        # Scenario when the stock price is between the put and call strike prices
+        payout = net_premium
+    elif protective_put_strike < stock_price < put_strike:
+        # Scenario when the stock price is between the protective put and put strike prices
+        payout = (put_strike - stock_price) + net_premium
+    elif stock_price < protective_put_strike:
+        # Scenario when the stock price is below the protective put strike price
+        payout = (put_strike - protective_put_strike) + net_premium
+
+    return payout
+
+# Example Usage
+stock_price = 100  # Example stock price at expiration
+call_strike = 110
+put_strike = 90
+protective_put_strike = 85
+premium_call = 5
+premium_put = 4
+premium_protective_put = 2
+
+payout = calculate_payout(stock_price, call_strike, put_strike, protective_put_strike, premium_call, premium_put, premium_protective_put)
+print(f"The payout of the protective put short strangle strategy is: {payout}")
